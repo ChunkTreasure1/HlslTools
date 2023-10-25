@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 using ShaderTools.CodeAnalysis.Hlsl.Syntax;
 using ShaderTools.CodeAnalysis.Syntax;
 
@@ -89,7 +91,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
 
         private FunctionDeclarationSyntax ParseFunctionDeclaration()
         {
-            return (FunctionDeclarationSyntax) ParseFunctionDefinitionOrDeclaration(true);
+            return (FunctionDeclarationSyntax)ParseFunctionDefinitionOrDeclaration(true);
         }
 
         private DeclarationNameSyntax ParseDeclarationName(bool declarationOnly)
@@ -112,7 +114,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             return result;
         }
 
-        private SyntaxNode ParseFunctionDefinitionOrDeclaration(bool declarationOnly)
+        private SyntaxNode ParseFunctionDefinitionOrDeclaration(bool declarationOnly, TypeTemplateArgumentListSyntax templateArguments = null)
         {
             var attributes = ParseAttributes();
 
@@ -167,8 +169,9 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             {
                 var body = ParseBlock(new List<AttributeDeclarationSyntaxBase>());
                 var semicolon = NextTokenIf(SyntaxKind.SemiToken);
-                return new FunctionDefinitionSyntax(attributes, modifiers, returnType, 
-                    name, new ParameterListSyntax(openParen, new SeparatedSyntaxList<ParameterSyntax>(parameters), closeParen), 
+
+                return new FunctionDefinitionSyntax(templateArguments, attributes, modifiers, returnType,
+                    name, new ParameterListSyntax(openParen, new SeparatedSyntaxList<ParameterSyntax>(parameters), closeParen),
                     semantic, body, semicolon);
             }
             else
@@ -177,9 +180,84 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
 
                 Debug.Assert(name.Kind == SyntaxKind.IdentifierDeclarationName);
 
-                return new FunctionDeclarationSyntax(attributes, modifiers, returnType, name, 
-                    new ParameterListSyntax(openParen, new SeparatedSyntaxList<ParameterSyntax>(parameters), closeParen), 
+                return new FunctionDeclarationSyntax(templateArguments, attributes, modifiers, returnType,
+                    name, new ParameterListSyntax(openParen, new SeparatedSyntaxList<ParameterSyntax>(parameters), closeParen),
                     semantic, semicolon);
+            }
+        }
+
+        private bool IsPossibleTemplateArgument()
+        {
+            var resetPoint = GetResetPoint();
+            try
+            {
+                var st = ScanType();
+
+                if (st != ScanTypeFlags.MustBeType)
+                {
+                    return false;
+                }
+
+                if (Lookahead.Kind == SyntaxKind.LessThanToken)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            finally
+            {
+                Reset(ref resetPoint);
+            }
+        }
+
+        private bool IsPossibleTemplateArgumentList()
+        {
+            var resetPoint = GetResetPoint();
+            
+            try
+            {
+                while(Current.Kind != SyntaxKind.GreaterThanToken)
+                {
+                    NextToken();
+                }
+
+                if (Lookahead.Kind == SyntaxKind.OpenParenToken)
+                {
+                    return true;
+                }
+
+                return false;    
+            }
+            finally
+            {
+                Reset(ref resetPoint);
+            }
+        }
+
+        private bool IsPossibleTemplateTypeArgument()
+        {
+            var resetPoint = GetResetPoint();
+            try
+            {
+                switch (Current.Kind)
+                {
+                    case SyntaxKind.ClassKeyword:
+                    case SyntaxKind.StructKeyword:
+                    case SyntaxKind.TypenameKeyword:
+                        return true;
+                }
+
+                if (Lookahead.Kind == SyntaxKind.LessThanToken)
+                {
+                    return false;
+                }
+
+                return false;
+            }
+            finally
+            {
+                Reset(ref resetPoint);
             }
         }
 
@@ -227,6 +305,23 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             }
         }
 
+        TemplateArgumentSyntax ParseTemplateArgument()
+        {
+            var type = ParseType(true);
+            var declarator = ParseVariableDeclarator(type);
+            return new TemplateArgumentSyntax(type, declarator);
+        }
+
+        TemplateTypeArgumentSyntax ParseTemplateTypeArgument()
+        {
+            var typeDeclarator = Current;
+            NextToken();
+
+            var typeName = ParseName();
+
+            return new TemplateTypeArgumentSyntax(typeDeclarator, typeName);
+        }
+
         private ParameterSyntax ParseParameter()
         {
             var attributes = ParseAttributes();
@@ -253,6 +348,74 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             var semantic = Match(SyntaxKind.IdentifierToken);
 
             return new SemanticSyntax(colon, semantic);
+        }
+
+        private TypeTemplateArgumentListSyntax ParseTypeTemplateArgumentList()
+        {
+            var @template = Match(SyntaxKind.TemplateKeyword);
+            var openSign = Match(SyntaxKind.LessThanToken);
+
+            var arguments = new List<SyntaxNodeBase>();
+            var typeArguments = new List<SyntaxNodeBase>();
+
+            while (Current.Kind != SyntaxKind.GreaterThanToken)
+            {
+                if (IsPossibleTemplateArgument())
+                {
+                    arguments.Add(ParseTemplateArgument());
+                    if (Current.Kind != SyntaxKind.GreaterThanToken)
+                    {
+                        var action = SkipBadTokens(
+                            p => p.Current.Kind != SyntaxKind.CommaToken,
+                            p => p.IsTerminator() || p.Current.Kind == SyntaxKind.LessThanToken,
+                            SyntaxKind.CommaToken);
+                        if (action == PostSkipAction.Abort)
+                            break;
+
+                        if (Current.Kind == SyntaxKind.CommaToken)
+                        {
+                            arguments.Add(Match(SyntaxKind.CommaToken));
+                        }
+                    }
+                }
+                else if (IsPossibleTemplateTypeArgument())
+                {
+                    typeArguments.Add(ParseTemplateTypeArgument());
+                    if (Current.Kind != SyntaxKind.GreaterThanToken)
+                    {
+                        var action = SkipBadTokens(
+                            p => p.Current.Kind != SyntaxKind.CommaToken,
+                            p => p.IsTerminator() || p.Current.Kind == SyntaxKind.LessThanToken,
+                            SyntaxKind.CommaToken);
+                        if (action == PostSkipAction.Abort)
+                            break;
+
+                        if (Current.Kind == SyntaxKind.CommaToken)
+                        {
+                            typeArguments.Add(Match(SyntaxKind.CommaToken));
+                        }
+                    }
+                }
+                else
+                {
+                    var action = SkipBadTokens(
+                        p => !p.IsPossibleTemplateArgument() && !p.IsPossibleTemplateTypeArgument(),
+                        p => p.IsTerminator() || p.Current.Kind == SyntaxKind.LessThanToken,
+                        SyntaxKind.GreaterThanToken);
+                    if (action == PostSkipAction.Abort)
+                        break;
+                }
+            }
+
+            var closeSign = Match(SyntaxKind.GreaterThanToken);
+
+            return new TypeTemplateArgumentListSyntax(@template, openSign, new SeparatedSyntaxList<TemplateArgumentSyntax>(arguments), new SeparatedSyntaxList<TemplateTypeArgumentSyntax>(typeArguments), closeSign);
+        }
+
+        private SyntaxNode ParseTemplateFunctionDefinitionOrDeclaration(bool declarationOnly)
+        {
+            var templateArguments = ParseTypeTemplateArgumentList();
+            return ParseFunctionDefinitionOrDeclaration(declarationOnly, templateArguments);
         }
 
         private ConstantBufferSyntax ParseConstantBuffer()
@@ -379,7 +542,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             {
                 _allowGreaterThanTokenAroundRhsExpression = false;
             }
-            
+
             var semicolon = Match(SyntaxKind.SemiToken);
             return new ExpressionStatementSyntax(new List<AttributeDeclarationSyntaxBase>(), expression, semicolon);
         }

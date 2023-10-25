@@ -17,6 +17,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding.BoundNodes
         IntrinsicScalarType,
         IntrinsicObjectType,
         UnknownType,
+        TemplateType,
 
         // Expressions
         FunctionInvocationExpression,

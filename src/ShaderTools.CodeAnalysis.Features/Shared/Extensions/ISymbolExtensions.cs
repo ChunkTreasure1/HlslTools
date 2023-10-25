@@ -33,6 +33,8 @@ namespace ShaderTools.CodeAnalysis.Shared.Extensions
                     return Glyph.Method;
                 case SymbolKind.Variable:
                     return Glyph.Local; // Not quite right.
+                case SymbolKind.TemplateType:
+                    return Glyph.Local;
                 case SymbolKind.Parameter:
                     return Glyph.Parameter;
                 case SymbolKind.Indexer:

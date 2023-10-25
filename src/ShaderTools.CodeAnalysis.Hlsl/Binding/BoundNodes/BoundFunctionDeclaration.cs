@@ -7,8 +7,8 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding.BoundNodes
     {
         public BoundType ReturnType { get; }
 
-        public BoundFunctionDeclaration(FunctionSymbol functionSymbol, BoundType returnType, ImmutableArray<BoundVariableDeclaration> parameters)
-            : base(BoundNodeKind.FunctionDeclaration, functionSymbol, parameters)
+        public BoundFunctionDeclaration(FunctionSymbol functionSymbol, BoundType returnType, ImmutableArray<BoundVariableDeclaration> parameters, ImmutableArray<BoundVariableDeclaration> templateArguments, ImmutableArray<BoundTemplateType> templateTypeArguments)
+            : base(BoundNodeKind.FunctionDeclaration, functionSymbol, parameters, templateArguments, templateTypeArguments)
         {
             ReturnType = returnType;
         }

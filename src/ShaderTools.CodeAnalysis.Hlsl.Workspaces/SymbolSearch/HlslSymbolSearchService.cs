@@ -125,6 +125,8 @@ namespace ShaderTools.CodeAnalysis.Hlsl.SymbolSearch
                             expression.Name.GetUnqualifiedName().Name.FileSpan);
                     break;
                 }
+
+                // #TODO_Ivar: Add Here
                 case SyntaxKind.FunctionDeclaration:
                 {
                     var expression = (FunctionDeclarationSyntax) node;

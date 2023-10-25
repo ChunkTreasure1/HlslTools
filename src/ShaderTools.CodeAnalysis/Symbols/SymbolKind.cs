@@ -20,6 +20,7 @@
         Semantic,
         Technique,
         Attribute,
-        TypeAlias
+        TypeAlias,
+        TemplateType
     }
 }

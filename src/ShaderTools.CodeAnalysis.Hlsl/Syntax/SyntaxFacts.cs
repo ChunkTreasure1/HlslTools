@@ -267,6 +267,10 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
                     return "warning";
                 case SyntaxKind.WhileKeyword:
                     return "while";
+                case SyntaxKind.TemplateKeyword:
+                    return "template";
+                case SyntaxKind.TypenameKeyword:
+                    return "typename";
 
                 default:
                     return string.Empty;
@@ -1712,6 +1716,8 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
                 case SyntaxKind.VolatileKeyword:
                 case SyntaxKind.VoidKeyword:
                 case SyntaxKind.WhileKeyword:
+                case SyntaxKind.TemplateKeyword:
+                case SyntaxKind.TypenameKeyword:
                     return true;
 
                 default:
@@ -2764,6 +2770,10 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
                     return SyntaxKind.VoidKeyword;
                 case "while":
                     return SyntaxKind.WhileKeyword;
+                case "template":
+                    return SyntaxKind.TemplateKeyword;
+                case "typename":
+                    return SyntaxKind.TypenameKeyword;
 
                 case "false":
                     return SyntaxKind.FalseKeyword;
@@ -3017,6 +3027,15 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
                 for (var j = 0; j < leftParameter.Modifiers.Count; j++)
                     if (leftParameter.Modifiers[j].Text != rightParameter.Modifiers[j].Text)
                         return false;
+            }
+
+            if (left.TemplateArgumentList.Arguments.Count != right.TemplateArgumentList.Arguments.Count)
+                return false;
+
+            for (var i = 0; i < left.TemplateArgumentList.Arguments.Count; i++)
+            {
+                var leftArgument = left.TemplateArgumentList.Arguments[i];
+                var rightArgument = right.TemplateArgumentList.Arguments[i];
             }
 
             return true;

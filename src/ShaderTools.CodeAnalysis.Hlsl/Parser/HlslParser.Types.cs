@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.CodeAnalysis.Operations;
 using ShaderTools.CodeAnalysis.Hlsl.Diagnostics;
 using ShaderTools.CodeAnalysis.Hlsl.Syntax;
 using ShaderTools.CodeAnalysis.Syntax;
@@ -276,14 +277,72 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             return ParseIdentifier();
         }
 
+        private bool IsTemplateTypeArgument()
+        {
+            if (SyntaxFacts.IsPredefinedType(Current))
+                return true;
+
+            switch (Current.Kind)
+            {
+                case SyntaxKind.IdentifierToken:
+                    return true;
+            }
+
+            return false;
+        }
+
         private TemplateArgumentListSyntax ParseTemplateArgumentList()
         {
-            SyntaxToken lessThanToken, greaterThanToken;
-            SeparatedSyntaxList<ExpressionSyntax> arguments;
-            ParseArgumentList(SyntaxKind.LessThanToken, SyntaxKind.GreaterThanToken, true,
-                out lessThanToken, out arguments, out greaterThanToken);
+            if (Current.Kind != SyntaxKind.LessThanToken)
+            {
+                return null;
+            }
 
-            return new TemplateArgumentListSyntax(lessThanToken, arguments, greaterThanToken);
+            SeparatedSyntaxList<ExpressionSyntax> arguments;
+
+            var openToken = Match(SyntaxKind.LessThanToken);
+
+            var args = new List<SyntaxNodeBase>();
+
+            if (Current.Kind != SyntaxKind.GreaterThanToken)
+            {
+                CommaIsSeparatorStack.Push(true);
+
+                try
+                {
+                    if (IsTemplateTypeArgument())
+                    {
+                        args.Add(ParseType(false));
+                    }
+                    else
+                    {
+                        args.Add(ParseExpression());
+                    }
+
+                    while (Current.Kind == SyntaxKind.CommaToken)
+                    {
+                        args.Add(Match(SyntaxKind.CommaToken));
+                        if (IsTemplateTypeArgument())
+                        {
+                            args.Add(ParseType(false));
+                        }
+                        else
+                        {
+                            args.Add(ParseExpression());
+                        }
+                    }
+                }
+                finally
+                {
+                    CommaIsSeparatorStack.Pop();
+                }
+            }
+
+            arguments = new SeparatedSyntaxList<ExpressionSyntax>(args);
+
+            var closeToken = Match(SyntaxKind.GreaterThanToken);
+
+            return new TemplateArgumentListSyntax(openToken, arguments, closeToken);
         }
 
         private ScalarTypeSyntax ParseScalarType(SyntaxToken token)

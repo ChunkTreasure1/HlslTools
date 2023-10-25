@@ -8,7 +8,7 @@ using ShaderTools.CodeAnalysis.Syntax;
 namespace ShaderTools.CodeAnalysis.Hlsl.Parser
 {
     internal partial class HlslParser
-	{
+    {
         public StatementSyntax ParseStatement()
         {
             var current = _tokenIndex;
@@ -74,7 +74,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             if (type is TypeDefinitionSyntax && (Current.Kind == SyntaxKind.SemiToken || Current.Kind == SyntaxKind.EndOfFileToken))
             {
                 var semi = Match(SyntaxKind.SemiToken);
-                return new TypeDeclarationStatementSyntax(mods, (TypeDefinitionSyntax) type, semi);
+                return new TypeDeclarationStatementSyntax(mods, (TypeDefinitionSyntax)type, semi);
             }
             else
             {
@@ -212,9 +212,9 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                                 isNonEqualsBinaryToken)
                             {
                                 var missingIdentifier = InsertMissingToken(SyntaxKind.IdentifierToken);
-                                return new VariableDeclaratorSyntax(missingIdentifier, 
-                                    new List<ArrayRankSpecifierSyntax>(), 
-                                    new List<VariableDeclaratorQualifierSyntax>(), 
+                                return new VariableDeclaratorSyntax(missingIdentifier,
+                                    new List<ArrayRankSpecifierSyntax>(),
+                                    new List<VariableDeclaratorQualifierSyntax>(),
                                     null, null);
                             }
                         }
@@ -372,7 +372,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                 _allowLinearAndPointAsIdentifiers = false;
                 _allowGreaterThanTokenAroundRhsExpression = false;
             }
-            
+
             var greaterThan = NextTokenIf(SyntaxKind.GreaterThanToken);
             var semicolon = Match(SyntaxKind.SemiToken);
 
@@ -574,6 +574,55 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             }
         }
 
+        private bool IsPossibleTemplateFunctionDeclaration()
+        {
+            var resetPoint = GetResetPoint();
+
+            try
+            {
+                ParseTypeTemplateArgumentList();
+                ParseAttributes();
+                var modifiers = new List<SyntaxToken>();
+                ParseDeclarationModifiers(modifiers);
+
+                var st = ScanType();
+
+                if (st == ScanTypeFlags.NotType)
+                {
+                    return false;
+                }
+
+                if (Current.Kind != SyntaxKind.IdentifierToken)
+                {
+                    return false;
+                }
+
+                NextToken();
+
+                while (Current.Kind == SyntaxKind.ColonColonToken)
+                {
+                    NextToken();
+                    if (Current.Kind != SyntaxKind.IdentifierToken)
+                    {
+                        return false;
+                    }
+
+                    NextToken();
+                }
+
+                if (Current.Kind == SyntaxKind.OpenParenToken)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            finally
+            {
+                Reset(ref resetPoint);
+            }
+        }
+
         private bool IsPossibleVariableDeclarationStatement()
         {
             return IsPossibleDeclarationStatement();
@@ -732,7 +781,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             var statement = ParseEmbeddedStatement();
 
             return new ForStatementSyntax(attributes, @for, openParen, decl,
-                initializer, semi, condition, semi2, 
+                initializer, semi, condition, semi2,
                 incrementor, closeParen, statement);
         }
 

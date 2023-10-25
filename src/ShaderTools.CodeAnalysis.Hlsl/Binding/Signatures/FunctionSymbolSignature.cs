@@ -30,7 +30,6 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding.Signatures
         }
 
         public override int ParameterCount { get; }
-
         public override bool HasVariadicParameter { get; }
 
         public FunctionSymbol Symbol { get; }

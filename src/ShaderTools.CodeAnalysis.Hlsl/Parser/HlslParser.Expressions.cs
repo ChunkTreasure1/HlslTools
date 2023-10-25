@@ -28,7 +28,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                 var compile = Match(SyntaxKind.CompileKeyword);
                 var shaderTarget = Match(SyntaxKind.IdentifierToken);
                 var shaderFunctionName = ParseIdentifier();
-                var shaderFunction = new FunctionInvocationExpressionSyntax(shaderFunctionName, ParseParenthesizedArgumentList(false));
+                var shaderFunction = new FunctionInvocationExpressionSyntax(shaderFunctionName, ParseTemplateArgumentList(), ParseParenthesizedArgumentList(false));
                 return new CompileExpressionSyntax(compile, shaderTarget, shaderFunction);
             }
 
@@ -191,21 +191,32 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
         {
             var name = ParseName();
             if (Current.Kind == SyntaxKind.OpenParenToken)
+            {
                 return ParseFunctionInvocationExpression(name);
+            }
+            else if(Current.Kind == SyntaxKind.LessThanToken)
+            {
+                if (IsPossibleTemplateArgumentList())
+                {
+                    return ParseFunctionInvocationExpression(name);
+                }
+            }
+
             return name;
         }
 
         private FunctionInvocationExpressionSyntax ParseFunctionInvocationExpression(NameSyntax name)
         {
+            var templateArgs = ParseTemplateArgumentList();
             var arguments = ParseParenthesizedArgumentList(false);
-            return new FunctionInvocationExpressionSyntax(name, arguments);
+            return new FunctionInvocationExpressionSyntax(name, templateArgs, arguments);
         }
 
         private NumericConstructorInvocationExpressionSyntax ParseNumericConstructorInvocationExpression()
         {
             var type = ParseType(false);
 
-            return new NumericConstructorInvocationExpressionSyntax((NumericTypeSyntax) type, ParseParenthesizedArgumentList(true));
+            return new NumericConstructorInvocationExpressionSyntax((NumericTypeSyntax) type, ParseTemplateArgumentList(), ParseParenthesizedArgumentList(true));
         }
 
         private ExpressionSyntax ParsePostFixExpression(ExpressionSyntax expr)
@@ -231,7 +242,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                         var name = Match(SyntaxKind.IdentifierToken);
 
                         if (Current.Kind == SyntaxKind.OpenParenToken)
-                            expr = new MethodInvocationExpressionSyntax(expr, dot, name, ParseParenthesizedArgumentList(false));
+                            expr = new MethodInvocationExpressionSyntax(expr, dot, name, ParseTemplateArgumentList(), ParseParenthesizedArgumentList(false));
                         else
                             expr = new FieldAccessExpressionSyntax(expr, dot, name);
 

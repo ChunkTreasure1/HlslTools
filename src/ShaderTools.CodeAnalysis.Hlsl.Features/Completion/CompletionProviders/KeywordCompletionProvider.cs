@@ -115,6 +115,9 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Completion.CompletionProviders
             if (isStatementContext)
                 yield return SyntaxKind.SwitchKeyword;
 
+            if (isTypeDeclarationContext)
+                yield return SyntaxKind.TemplateKeyword;
+
             if (isStatementContext || isBooleanLiteralExpressionContext)
                 yield return SyntaxKind.TrueKeyword;
 

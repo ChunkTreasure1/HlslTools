@@ -464,6 +464,8 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
         VoidKeyword,
         WarningKeyword,
         WhileKeyword,
+        TemplateKeyword,
+        TypenameKeyword,
 
         TrueKeyword,
         FalseKeyword,
@@ -607,6 +609,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
         FunctionInvocationExpression,
         NumericConstructorInvocationExpression,
         ElementAccessExpression,
+        TemplateExpression,
         Argument,
         ArgumentList,
         TemplateArgumentList,
@@ -728,6 +731,10 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Syntax
 
         Parameter,
         ParameterList,
+
+        TemplateArgument,
+        TemplateTypeArgument,
+        TypeTemplateArgumentList,
 
         BadToken
     }

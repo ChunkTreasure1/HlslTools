@@ -58,6 +58,7 @@
     <TypeComment>
       <summary></summary>
     </TypeComment>
+    <Field Name="TemplateArgumentList" Type="TypeTemplateArgumentListSyntax" />
     <Field Name="Attributes" Type="List&lt;AttributeDeclarationSyntaxBase&gt;" />
     <Field Name="Modifiers" Type="List&lt;SyntaxToken&gt;" />
     <Field Name="ReturnType" Type="TypeSyntax" />
@@ -75,6 +76,7 @@
       <summary></summary>
     </TypeComment>
     <Field Name="ArgumentListSyntax" Type="ArgumentListSyntax" Abstract="true" />
+	<Field Name="TemplateArgumentListSyntax" Type="TemplateArgumentListSyntax" Abstract="true" />
   </AbstractNode>
   <AbstractNode Name="NameSyntax" Base="TypeSyntax">
     <TypeComment>
@@ -974,6 +976,13 @@
         <summary></summary>
       </PropertyComment>
     </Field>
+	  <Field Name="TemplateArgumentList" Type="TemplateArgumentListSyntax">
+		  <PropertyComment>
+			  <summary></summary>
+		  </PropertyComment>
+		  <Kind Name="TemplateArgumentList"/>
+		  <Getter Name ="TemplateArgumentListSyntax" Override="true"/>
+	  </Field>
     <Field Name="ArgumentList" Type="ArgumentListSyntax">
       <PropertyComment>
         <summary></summary>
@@ -1278,6 +1287,13 @@
         <summary></summary>
       </PropertyComment>
     </Field>
+    <Field Name="TemplateArgumentList" Type="TemplateArgumentListSyntax">
+  	  <PropertyComment>
+  		  <summary></summary>
+  	  </PropertyComment>
+  	  <Kind Name="TemplateArgumentList"/>
+  	  <Getter Name ="TemplateArgumentListSyntax" Override="true"/>
+    </Field>
     <Field Name="ArgumentList" Type="ArgumentListSyntax">
       <PropertyComment>
         <summary></summary>
@@ -1337,6 +1353,13 @@
       <PropertyComment>
         <summary></summary>
       </PropertyComment>
+    </Field>
+    <Field Name="TemplateArgumentList" Type="TemplateArgumentListSyntax">
+  	  <PropertyComment>
+  		  <summary></summary>
+  	  </PropertyComment>
+  	  <Kind Name="TemplateArgumentList"/>
+  	  <Getter Name ="TemplateArgumentListSyntax" Override="true"/>
     </Field>
     <Field Name="ArgumentList" Type="ArgumentListSyntax">
       <PropertyComment>
@@ -1453,6 +1476,42 @@
       </PropertyComment>
       <Kind Name="VariableDeclarator"/>
     </Field>
+  </Node>
+
+  <Node Name ="TemplateArgumentSyntax" Base="SyntaxNode">
+    <TypeComment>
+  	  <summary></summary>
+    </TypeComment>
+    <Kind Name="TemplateArgument"/>
+    <Field Name="Type" Type="TypeSyntax">
+  	  <PropertyComment>
+  	    <summary></summary>
+  	  </PropertyComment>
+    </Field>
+    <Field Name="Declarator" Type="VariableDeclaratorSyntax">
+  	  <PropertyComment>
+  	    <summary></summary>
+  	  </PropertyComment>
+  	  <Kind Name="VariableDeclarator"/>
+    </Field>
+  </Node>
+
+  <Node Name ="TemplateTypeArgumentSyntax" Base="SyntaxNode">
+  	<TypeComment>
+  		<summary></summary>
+  	</TypeComment>
+  	<Kind Name="TemplateTypeArgument"/>
+  	<Field Name="TypeDeclarator" Type="SyntaxToken">
+  		<PropertyComment>
+  			<summary></summary>
+  		</PropertyComment>
+  	</Field>
+  	<Field Name="TypeName" Type="TypeSyntax">
+  		<PropertyComment>
+  			<summary></summary>
+  		</PropertyComment>
+  		<Kind Name="VariableDeclarator"/>
+  	</Field>
   </Node>
 
   <Node Name="ParenthesizedExpressionSyntax" Base="ExpressionSyntax">
@@ -1991,6 +2050,41 @@
     </Field>
   </Node>
 
+  <Node Name="TypeTemplateArgumentListSyntax" Base="SyntaxNode">
+  	<TypeComment>
+  		<summary></summary>
+  	</TypeComment>
+  	<Kind Name="TypeTemplateArgumentList"/>
+    <Field Name="TemplateKeyword" Type="SyntaxToken">
+      <PropertyComment>
+        <summary></summary>
+      </PropertyComment>
+      <Kind Name="TemplateKeyword"/>
+    </Field>
+  	<Field Name="LessThanToken" Type="SyntaxToken">
+  		<PropertyComment>
+  			<summary></summary>
+  		</PropertyComment>
+  		<Kind Name="LessThanToken"/>
+  	</Field>
+  	<Field Name="Arguments" Type="SeparatedSyntaxList&lt;TemplateArgumentSyntax&gt;">
+  		<PropertyComment>
+  			<summary></summary>
+  		</PropertyComment>
+  	</Field>
+	<Field Name="TypeArguments" Type="SeparatedSyntaxList&lt;TemplateTypeArgumentSyntax&gt;">
+		<PropertyComment>
+			<summary></summary>
+		</PropertyComment>
+	</Field>
+  	<Field Name="GreaterThanToken" Type="SyntaxToken">
+  		<PropertyComment>
+  			<summary></summary>
+  		</PropertyComment>
+  		<Kind Name="GreaterThanToken"/>
+  	</Field>
+  </Node>
+	
   <Node Name="TechniqueSyntax" Base="SyntaxNode">
     <TypeComment>
       <summary></summary>

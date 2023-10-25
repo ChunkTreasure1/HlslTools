@@ -55,6 +55,9 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Symbols.Markup
                 case SymbolKind.ConstantBuffer:
                     markup.AppendConstantBuffer((ConstantBufferSymbol) symbol, format);
                     break;
+                case SymbolKind.TemplateType:
+                    markup.AppendName(SymbolMarkupKind.ClassName, ((TemplateTypeSymbol)symbol).Name);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(symbol), symbol.Kind.ToString());
             }

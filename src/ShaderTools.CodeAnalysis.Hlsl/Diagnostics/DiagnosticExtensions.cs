@@ -95,6 +95,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Diagnostics
 
         public static void ReportUndeclaredType(this ICollection<Diagnostic> diagnostics, SyntaxNode type)
         {
+            // #TODO_Ivar: Here
             diagnostics.Report(type.SourceRange, DiagnosticId.UndeclaredType, type.ToStringIgnoringMacroReferences());
         }
 

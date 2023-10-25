@@ -420,10 +420,10 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                     ? Match(SyntaxKind.CloseParenToken)
                     : null;
 
-                expr = new FunctionInvocationExpressionSyntax((IdentifierNameSyntax) expr, new ArgumentListSyntax(
+                expr = new FunctionInvocationExpressionSyntax((IdentifierNameSyntax) expr, new TemplateArgumentListSyntax(null, new SeparatedSyntaxList<ExpressionSyntax>(), null), new ArgumentListSyntax(
                     openParen,
                     new SeparatedSyntaxList<ExpressionSyntax>(new List<SyntaxNodeBase> { name }),
-                    closeParen));
+                    closeParen));;
             }
 
             return expr;

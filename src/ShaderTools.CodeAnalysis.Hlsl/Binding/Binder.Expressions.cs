@@ -451,6 +451,12 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding
             if (anyErrors)
                 return new BoundMethodInvocationExpression(syntax, target, arguments, OverloadResolutionResult<FunctionSymbolSignature>.None);
 
+            // It's a template, we don't know what type it is
+            if (target.Type is TemplateTypeSymbol)
+            {
+                return new BoundMethodInvocationExpression(syntax, target, arguments, OverloadResolutionResult<FunctionSymbolSignature>.None);
+            }
+
             var result = LookupMethod(target.Type, name, argumentTypes);
 
             if (result.Best == null)
@@ -575,6 +581,12 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding
             {
                 // To avoid cascading errors, we'll give up early.
                 return new BoundErrorExpression();
+            }
+
+            if (target.Type is TemplateTypeSymbol)
+            {
+                var field = new FieldSymbol(name.Text, "", target.Type, target.Type);
+                return new BoundFieldExpression(target, field);
             }
 
             var fieldSymbols = LookupField(target.Type, name).ToImmutableArray();

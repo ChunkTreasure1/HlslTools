@@ -127,7 +127,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             {
                 // Skip current token, and carry on parsing.
                 var skippedTokensTrivia = CreateSkippedTokensTrivia(new[] { Current });
-                
+
                 var diagnostics = new List<Diagnostic>(Lookahead.Diagnostics);
                 diagnostics.ReportTokenUnexpected(Current.SourceRange, Current);
 
@@ -149,7 +149,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
         protected TNode WithDiagnostic<TNode>(TNode node, DiagnosticId diagnosticId, params object[] args)
             where TNode : SyntaxNode
         {
-            var diagnostic = Diagnostic.Create(HlslMessageProvider.Instance, node.SourceRange, (int) diagnosticId, args);
+            var diagnostic = Diagnostic.Create(HlslMessageProvider.Instance, node.SourceRange, (int)diagnosticId, args);
             return node.WithDiagnostic(diagnostic);
         }
 
@@ -161,7 +161,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
             var leadingLocatedTrivia = Current.LeadingTrivia.OfType<LocatedNode>().FirstOrDefault();
             if (leadingLocatedTrivia != null)
                 missingTokenSpan = new SourceFileSpan(leadingLocatedTrivia.FileSpan.File, new TextSpan(leadingLocatedTrivia.FileSpan.Span.Start, 0));
-            
+
             var diagnosticSpan = GetDiagnosticSourceRangeForMissingToken();
             var diagnostics = new List<Diagnostic>(1);
             diagnostics.ReportTokenExpected(diagnosticSpan, Current, kind);
@@ -344,7 +344,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
         {
             var name = ParseAttributeSpecifierName();
             var argumentList = ParseAttributeArgumentList();
-            
+
             return new AttributeSyntax(name, argumentList);
         }
 
@@ -422,7 +422,16 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Parser
                     case SyntaxKind.SemiToken:
                         declarations.Add(new EmptyStatementSyntax(new List<AttributeDeclarationSyntaxBase>(), NextToken()));
                         break;
+
                     default:
+                        if (Current.Kind == SyntaxKind.TemplateKeyword) 
+                        {
+                            if (IsPossibleTemplateFunctionDeclaration())
+                            {
+                                declarations.Add(ParseTemplateFunctionDefinitionOrDeclaration(false));
+                            }
+                        }
+
                         if (IsPossibleCBufferOrTBuffer())
                             declarations.Add(ParseConstantBuffer());
                         if (IsPossibleFunctionDeclaration())
